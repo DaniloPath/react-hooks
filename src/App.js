@@ -1,51 +1,43 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import Header from './components/Header';
 import Spinner from './components/Spinner';
 import Candidates from './components/Candidates';
 
 
-export default class App extends Component {
-  constructor(){
-    super()
-
-    this.state = {
-      candidates: []
-    }
-    this.interval = null
-  }
-
-  componentDidMount(){
-    this.interval = setInterval(() => {
+export default function App() {
+  const [candidates, setCandidates] = useState([])
+  const [previousVotes, setPreviousVotes] = useState([])
+  
+  useState(() => {
+    const interval = setInterval(() => {
       fetch('http://localhost:8080/votes').then((res)=>{
         return res.json()
       }).then((json)=>{
 
-        const previousVotes = this.state.candidates.map(({id, votes})=>{
+        const previousVotes = candidates.map(({id, votes})=>{
           return {id, votes}
         })
 
-        this.setState({
-          candidates: json.candidates,
-          previousVotes,
-        })
+        setCandidates(json.candidates)
+        setPreviousVotes(previousVotes)        
       })      
-    }, 1000);
-  }
- 
-  render() {
-    const {candidates, previousVotes} = this.state
-
-    if (candidates.length === 0) {
-      return (
-        <Spinner descript="Carregando..." />
-      )
+    }, 1000)    
+    return () => {
+      clearInterval(interval)
     }
-    
-    return (
-      <div>
-        <Header>Votação</Header>
-        <Candidates candidates={candidates} previousVotes={previousVotes} />
-      </div>
+  }, [candidates])
+
+if (candidates.length === 0) {
+  return (
+    <Spinner descript="Carregando..." />
     )
-  }
 }
+
+return (
+  <div>
+    <Header>Votação</Header>
+    <Candidates candidates={candidates} previousVotes={previousVotes} />
+  </div>
+  )
+}
+
